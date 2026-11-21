@@ -61,15 +61,40 @@ window.addEventListener('scroll', () => {
   log('scroll event, scrollY='+window.scrollY+' innerHeight='+window.innerHeight);
 });
 
+const initialInnerHeight = window.innerHeight;
+
+function showFakeUI(reason) {
+  document.getElementById('fakebar').style.display = 'flex';
+  document.getElementById('fakeform').style.display = 'block';
+  log('fake address bar + fake form ditampilkan (' + reason + ')');
+}
+
+function animatedScroll(targetY, duration) {
+  const startY = window.scrollY;
+  const startTime = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    const y = startY + (targetY - startY) * t;
+    window.scrollTo(0, y);
+    if (t < 1) {
+      requestAnimationFrame(step);
+    } else {
+      log('animatedScroll selesai. scrollY=' + window.scrollY + ' innerHeight=' + window.innerHeight + ' (awal ' + initialInnerHeight + ')');
+      setTimeout(checkToolbarAndReveal, 300);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+function checkToolbarAndReveal() {
+  const grew = window.innerHeight > initialInnerHeight + 20;
+  log('cek toolbar: innerHeight sekarang=' + window.innerHeight + ', awal=' + initialInnerHeight + ' -> ' + (grew ? 'TOOLBAR TAMPAK NGUMPET (innerHeight nambah)' : 'toolbar kelihatan masih tampil / tidak berubah'));
+  showFakeUI(grew ? 'toolbar terdeteksi ngumpet' : 'dipaksa tampil walau toolbar belum pasti ngumpet');
+}
+
 setTimeout(() => {
-  log('mencoba window.scrollTo(0,1) secara otomatis (tanpa scroll asli dari user)...');
-  window.scrollTo(0, 1);
-  setTimeout(() => {
-    log('setelah scrollTo: scrollY='+window.scrollY+' innerHeight='+window.innerHeight+' outerHeight='+window.outerHeight);
-    document.getElementById('fakebar').style.display = 'flex';
-    document.getElementById('fakeform').style.display = 'block';
-    log('fake address bar + fake form ditampilkan di posisi atas layar');
-  }, 400);
+  log('mencoba animatedScroll(0 -> 600px, 350ms) meniru swipe asli, lalu balik ke atas...');
+  animatedScroll(600, 350);
 }, 2000);
 
 document.getElementById('go').addEventListener('click', (e) => {
