@@ -66,32 +66,34 @@ let revealed = false;
 log('halaman dimuat. innerHeight awal=' + initialInnerHeight + ' outerHeight=' + window.outerHeight);
 log('SEKARANG SCROLL PAKAI JARI KAMU (bukan tunggu otomatis)');
 
-function maybeReveal(source) {
-  if (revealed) return;
-  const h = window.innerHeight;
+function setFake(on, h, source) {
+  if (on === revealed) return;
+  revealed = on;
+  document.getElementById('fakebar').style.display = on ? 'flex' : 'none';
+  document.getElementById('fakeform').style.display = on ? 'block' : 'none';
+  log('[' + source + '] h=' + h + ' (awal ' + initialInnerHeight + ') -> fake UI ' + (on ? 'DIPASANG (toolbar asli ngumpet)' : 'DISEMBUNYIKAN LAGI (toolbar asli balik muncul)'));
+}
+
+function checkHeight(source) {
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   if (h > initialInnerHeight + 20) {
-    revealed = true;
-    log('[' + source + '] innerHeight naik jadi ' + h + ' (awal ' + initialInnerHeight + ') -> toolbar asli TERDETEKSI ngumpet beneran');
-    document.getElementById('fakebar').style.display = 'flex';
-    document.getElementById('fakeform').style.display = 'block';
-    log('fake address bar + fake form dipasang di posisi atas (bukan dipaksa, react ke scroll asli)');
+    setFake(true, h, source);
+  } else if (h <= initialInnerHeight + 5) {
+    setFake(false, h, source);
   }
 }
 
 window.addEventListener('scroll', () => {
-  log('scroll event (asli), scrollY=' + window.scrollY + ' innerHeight=' + window.innerHeight);
-  maybeReveal('scroll');
+  checkHeight('scroll');
 }, { passive: true });
 
 window.addEventListener('resize', () => {
-  log('resize event, innerHeight sekarang=' + window.innerHeight);
-  maybeReveal('resize');
+  checkHeight('resize');
 });
 
 if (window.visualViewport) {
   window.visualViewport.addEventListener('resize', () => {
-    log('visualViewport resize, height=' + window.visualViewport.height);
-    maybeReveal('visualViewport');
+    checkHeight('visualViewport');
   });
 }
 
