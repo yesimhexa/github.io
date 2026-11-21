@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>PANE A - DECOY</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #1a7f37;
+    color: white;
+    font-family: -apple-system, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  h1 { font-size: 48px; }
+  #status { font-size: 22px; background: rgba(0,0,0,0.3); padding: 12px 20px; border-radius: 8px; }
+  .val { font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>PANE A &mdash; DECOY<br>(this pane should be the ACTIVE one)</h1>
+  <div id="status">
+    visibilityState: <span class="val" id="vis">-</span><br>
+    hasFocus(): <span class="val" id="focus">-</span><br>
+    local time: <span class="val" id="time">-</span>
+  </div>
+  <script>
+    function tick() {
+      document.getElementById('vis').textContent = document.visibilityState;
+      document.getElementById('focus').textContent = document.hasFocus();
+      document.getElementById('time').textContent = new Date().toISOString().slice(11,23);
+    }
+    setInterval(tick, 150);
+    tick();
+  </script>
+</body>
+</html>

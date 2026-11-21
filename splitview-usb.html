@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>PANE B - USB TRIGGER</title>
+<style>
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: #8a1f11;
+    color: white;
+    font-family: -apple-system, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  h1 { font-size: 36px; }
+  button {
+    font-size: 24px;
+    padding: 16px 28px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    background: #ffd166;
+    font-weight: bold;
+  }
+  #status { font-size: 20px; background: rgba(0,0,0,0.3); padding: 12px 20px; border-radius: 8px; margin-top: 20px; text-align: left; white-space: pre-wrap; max-width: 90vw; }
+  .val { font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>PANE B &mdash; USB TRIGGER<br>(this pane should be the INACTIVE one)</h1>
+  <div id="live">
+    visibilityState: <span class="val" id="vis">-</span> |
+    hasFocus(): <span class="val" id="focus">-</span> |
+    time: <span class="val" id="time">-</span>
+  </div>
+  <button id="btn">Click Me: navigator.usb.requestDevice()</button>
+  <div id="status">(click the button above)</div>
+  <script>
+    function tick() {
+      document.getElementById('vis').textContent = document.visibilityState;
+      document.getElementById('focus').textContent = document.hasFocus();
+      document.getElementById('time').textContent = new Date().toISOString().slice(11,23);
+    }
+    setInterval(tick, 150);
+    tick();
+
+    const statusEl = document.getElementById('status');
+    function log(line) {
+      const t = new Date().toISOString().slice(11,23);
+      statusEl.textContent += `\n[${t}] ${line}`;
+    }
+
+    document.getElementById('btn').addEventListener('click', () => {
+      statusEl.textContent = '';
+      log(`CLICK. visibilityState=${document.visibilityState} hasFocus=${document.hasFocus()}`);
+      if (!navigator.usb) {
+        log('navigator.usb is undefined in this context.');
+        return;
+      }
+      log('Calling navigator.usb.requestDevice({filters: []}) ...');
+      const t0 = performance.now();
+      navigator.usb.requestDevice({ filters: [] }).then(device => {
+        log(`RESOLVED after ${(performance.now()-t0).toFixed(0)}ms: ${device.productName || device}`);
+      }).catch(err => {
+        log(`REJECTED after ${(performance.now()-t0).toFixed(0)}ms: ${err.name}: ${err.message}`);
+      });
+      // If the promise is still pending after 1.5s, the native chooser dialog is almost
+      // certainly open and waiting on the user (good signal independent of screenshots).
+      setTimeout(() => {
+        log('(+1500ms checkpoint reached — if nothing resolved/rejected above yet, the native device-chooser dialog is very likely open right now)');
+      }, 1500);
+    });
+  </script>
+</body>
+</html>
