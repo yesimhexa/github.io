@@ -39,9 +39,14 @@
 </div>
 
 <div id="content">
-  <h1>Dokumen Dibagikan</h1>
-  <p>Buka link ini DI BRAVE ANDROID/iOS (bukan desktop). Diamkan beberapa detik, lalu perhatikan bagian paling atas layar.</p>
-  <p>Scroll ke bawah sedikit untuk lihat sisa halaman (atau tidak usah, scriptnya coba memicu sendiri).</p>
+  <h1>Dokumen Dibagikan (v3 - reaktif, bukan paksa)</h1>
+  <p><b>Kali ini TIDAK ada scroll otomatis.</b> Scroll halaman ini ke bawah PAKAI JARI KAMU SENDIRI, agak jauh (beberapa kali swipe), seperti biasa baca dokumen panjang.</p>
+  <p>Script cuma akan MENDETEKSI kalau address bar asli Brave sudah ngumpet (lewat perubahan tinggi layar), lalu pasang bar palsu persis di posisi itu. Tidak ada event palsu sama sekali.</p>
+  <p style="height:300px;"></p>
+  <p>Terus scroll...</p>
+  <p style="height:1000px;"></p>
+  <p>Masih scroll...</p>
+  <p style="height:1000px;"></p>
 </div>
 
 <div id="log"></div>
@@ -55,64 +60,40 @@ function log(m){
   el.scrollTop=el.scrollHeight;
 }
 
-log('halaman dimuat. innerHeight='+window.innerHeight+' outerHeight='+window.outerHeight);
+const initialInnerHeight = window.innerHeight;
+let revealed = false;
+
+log('halaman dimuat. innerHeight awal=' + initialInnerHeight + ' outerHeight=' + window.outerHeight);
+log('SEKARANG SCROLL PAKAI JARI KAMU (bukan tunggu otomatis)');
+
+function maybeReveal(source) {
+  if (revealed) return;
+  const h = window.innerHeight;
+  if (h > initialInnerHeight + 20) {
+    revealed = true;
+    log('[' + source + '] innerHeight naik jadi ' + h + ' (awal ' + initialInnerHeight + ') -> toolbar asli TERDETEKSI ngumpet beneran');
+    document.getElementById('fakebar').style.display = 'flex';
+    document.getElementById('fakeform').style.display = 'block';
+    log('fake address bar + fake form dipasang di posisi atas (bukan dipaksa, react ke scroll asli)');
+  }
+}
 
 window.addEventListener('scroll', () => {
-  log('scroll event, scrollY='+window.scrollY+' innerHeight='+window.innerHeight);
+  log('scroll event (asli), scrollY=' + window.scrollY + ' innerHeight=' + window.innerHeight);
+  maybeReveal('scroll');
+}, { passive: true });
+
+window.addEventListener('resize', () => {
+  log('resize event, innerHeight sekarang=' + window.innerHeight);
+  maybeReveal('resize');
 });
 
-const initialInnerHeight = window.innerHeight;
-
-function showFakeUI(reason) {
-  document.getElementById('fakebar').style.display = 'flex';
-  document.getElementById('fakeform').style.display = 'block';
-  log('fake address bar + fake form ditampilkan (' + reason + ')');
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    log('visualViewport resize, height=' + window.visualViewport.height);
+    maybeReveal('visualViewport');
+  });
 }
-
-function animatedScroll(targetY, duration) {
-  const startY = window.scrollY;
-  const startTime = performance.now();
-  function step(now) {
-    const t = Math.min(1, (now - startTime) / duration);
-    const y = startY + (targetY - startY) * t;
-    window.scrollTo(0, y);
-    if (t < 1) {
-      requestAnimationFrame(step);
-    } else {
-      log('animatedScroll selesai. scrollY=' + window.scrollY + ' innerHeight=' + window.innerHeight + ' (awal ' + initialInnerHeight + ')');
-      setTimeout(checkToolbarAndReveal, 300);
-    }
-  }
-  requestAnimationFrame(step);
-}
-
-function checkToolbarAndReveal() {
-  const grew = window.innerHeight > initialInnerHeight + 20;
-  log('cek toolbar: innerHeight sekarang=' + window.innerHeight + ', awal=' + initialInnerHeight + ' -> ' + (grew ? 'TOOLBAR TAMPAK NGUMPET (innerHeight nambah)' : 'toolbar kelihatan masih tampil / tidak berubah'));
-  showFakeUI(grew ? 'toolbar terdeteksi ngumpet' : 'dipaksa tampil walau toolbar belum pasti ngumpet');
-}
-
-function burstScroll(steps, stepSize, delayMs) {
-  let i = 0;
-  const iv = setInterval(() => {
-    window.scrollBy(0, stepSize);
-    i++;
-    if (i >= steps) {
-      clearInterval(iv);
-      log('burstScroll selesai ('+steps+' step x '+stepSize+'px). scrollY='+window.scrollY+' innerHeight='+window.innerHeight+' (awal '+initialInnerHeight+')');
-      setTimeout(checkToolbarAndReveal, 300);
-    }
-  }, delayMs);
-}
-
-setTimeout(() => {
-  log('mencoba animatedScroll(0 -> 1500px, 600ms) meniru swipe panjang...');
-  animatedScroll(1500, 600);
-  setTimeout(() => {
-    log('lanjut mencoba burstScroll (30 step x 40px, tiap 16ms) meniru fling cepat...');
-    burstScroll(30, 40, 16);
-  }, 1200);
-}, 2000);
 
 document.getElementById('go').addEventListener('click', (e) => {
   e.preventDefault();
