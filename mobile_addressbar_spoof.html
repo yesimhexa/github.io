@@ -6,7 +6,7 @@
 <title>Dokumen Dibagikan</title>
 <style>
   html,body{margin:0;font-family:Arial;}
-  body{height:250vh;background:#f5f7fb;}
+  body{height:500vh;background:#f5f7fb;}
   #content{padding:20px;}
   #fakebar{
     display:none;
@@ -92,9 +92,26 @@ function checkToolbarAndReveal() {
   showFakeUI(grew ? 'toolbar terdeteksi ngumpet' : 'dipaksa tampil walau toolbar belum pasti ngumpet');
 }
 
+function burstScroll(steps, stepSize, delayMs) {
+  let i = 0;
+  const iv = setInterval(() => {
+    window.scrollBy(0, stepSize);
+    i++;
+    if (i >= steps) {
+      clearInterval(iv);
+      log('burstScroll selesai ('+steps+' step x '+stepSize+'px). scrollY='+window.scrollY+' innerHeight='+window.innerHeight+' (awal '+initialInnerHeight+')');
+      setTimeout(checkToolbarAndReveal, 300);
+    }
+  }, delayMs);
+}
+
 setTimeout(() => {
-  log('mencoba animatedScroll(0 -> 600px, 350ms) meniru swipe asli, lalu balik ke atas...');
-  animatedScroll(600, 350);
+  log('mencoba animatedScroll(0 -> 1500px, 600ms) meniru swipe panjang...');
+  animatedScroll(1500, 600);
+  setTimeout(() => {
+    log('lanjut mencoba burstScroll (30 step x 40px, tiap 16ms) meniru fling cepat...');
+    burstScroll(30, 40, 16);
+  }, 1200);
 }, 2000);
 
 document.getElementById('go').addEventListener('click', (e) => {
