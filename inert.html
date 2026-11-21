@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Inert pane (active)</title>
+<style>
+  body { font-family: sans-serif; text-align: center; margin-top: 15vh; background: #eaffea; }
+  h1 { color: #1a7a1a; font-size: 2.2em; }
+  p { font-size: 1.1em; color: #333; }
+</style>
+</head>
+<body>
+  <h1>INERT PANE</h1>
+  <p>Put this in the pane you click/focus FIRST (makes it the active pane).</p>
+  <p id="log" style="font-family: monospace; color: #555;"></p>
+  <script>
+    document.addEventListener('visibilitychange', () => {
+      document.getElementById('log').textContent = 'visibilitychange -> ' + document.visibilityState + ' @ ' + new Date().toISOString();
+    });
+  </script>
+</body>
+</html>

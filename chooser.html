@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Chooser pane (inactive)</title>
+<style>
+  body { font-family: sans-serif; text-align: center; margin-top: 10vh; background: #ffecec; }
+  h1 { color: #d62839; font-size: 2.2em; }
+  p { font-size: 1.1em; color: #333; }
+  button { font-size: 1.3em; padding: 12px 24px; cursor: pointer; }
+  #log { font-family: monospace; white-space: pre-wrap; text-align: left; max-width: 700px; margin: 2em auto; background: #fff3cd; border: 1px solid #e0c060; padding: 12px; }
+</style>
+</head>
+<body>
+  <h1>CHOOSER PANE</h1>
+  <p>Put this pane in the SPLIT VIEW but click the INERT pane first so this one stays inactive.
+     Then click this button WITHOUT clicking anywhere else on this pane first (if that's even
+     possible), or note at what point this pane shows as "active" in the tab strip / UI.</p>
+  <button id="usb">navigator.usb.requestDevice()</button>
+  <button id="hid">navigator.hid.requestDevice()</button>
+  <button id="serial">navigator.serial.requestPort()</button>
+  <div id="log"></div>
+  <script>
+    const log = (msg) => {
+      document.getElementById('log').textContent += new Date().toISOString() + '  ' + msg + '\n';
+    };
+    document.addEventListener('visibilitychange', () => {
+      log('visibilitychange -> ' + document.visibilityState);
+    });
+    document.addEventListener('focus', () => log('window focus event'));
+    window.addEventListener('focus', () => log('window focus (window)'));
+    document.getElementById('usb').addEventListener('click', async () => {
+      log('usb button clicked, hasFocus()=' + document.hasFocus() + ' visibilityState=' + document.visibilityState);
+      try {
+        const device = await navigator.usb.requestDevice({ filters: [] });
+        log('picked: ' + device.productName);
+      } catch (e) {
+        log('requestDevice result: ' + e.message);
+      }
+    });
+    document.getElementById('hid').addEventListener('click', async () => {
+      log('hid button clicked, hasFocus()=' + document.hasFocus() + ' visibilityState=' + document.visibilityState);
+      try {
+        const devices = await navigator.hid.requestDevice({ filters: [] });
+        log('picked ' + devices.length + ' device(s)');
+      } catch (e) {
+        log('requestDevice result: ' + e.message);
+      }
+    });
+    document.getElementById('serial').addEventListener('click', async () => {
+      log('serial button clicked, hasFocus()=' + document.hasFocus() + ' visibilityState=' + document.visibilityState);
+      try {
+        const port = await navigator.serial.requestPort({ filters: [] });
+        log('picked port');
+      } catch (e) {
+        log('requestPort result: ' + e.message);
+      }
+    });
+  </script>
+</body>
+</html>
